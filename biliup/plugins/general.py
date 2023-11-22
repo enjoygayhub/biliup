@@ -84,6 +84,9 @@ class Generic(DownloadBase):
         super().__init__(fname, url, suffix)
         self.handler = self
 
+    # check_stream 方法尝试将 url 解析为站点和URL模块，并获取解析后的流类型和源URL。
+    # 如果执行过程中出现异常，则将异常捕获并在异常处理程序中，尝试使用 YDownload 和 SDownload 类分别重新检查流，
+    # 并将成功的处理器对象赋值给 self.handler 成员变量。如果所有重试都失败，则返回 False ，否则返回 True 。
     def check_stream(self, is_check=False):
         logger.debug(self.fname)
         try:
@@ -102,7 +105,7 @@ class Generic(DownloadBase):
                     return True
             return False
         return True
-
+    # 根据 self.handler 是否为当前对象自身决定是否调用父类的 download 方法，还是调用成功处理器对象的 download 方法
     def download(self, filename):
         if self.handler == self:
             return super(Generic, self).download(filename)

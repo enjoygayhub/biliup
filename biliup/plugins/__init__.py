@@ -2,6 +2,11 @@ import logging
 import re
 
 logger = logging.getLogger('biliup')
+logger.setLevel(logging.INFO)
+# ch = logging.StreamHandler()
+# ch.setLevel(logging.INFO)
+# logger.addHandler(ch)
+
 
 def match1(text, *patterns):
     if len(patterns) == 1:

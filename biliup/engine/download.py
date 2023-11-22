@@ -13,8 +13,8 @@ from PIL import Image
 
 from biliup.config import config
 from biliup.database import DB as db
+from biliup.plugins import logger
 
-logger = logging.getLogger('biliup')
 
 
 class DownloadBase:
@@ -179,13 +179,17 @@ class DownloadBase:
             return False
         file_name = self.file_name
         # 将文件名和直播标题存储到数据库
+        
         db.update_file_list(self.database_row_id, file_name)
         db.update_room_title(self.database_row_id, self.room_title)
+        # 开始下载，返回结果
         retval = self.download(file_name)
+        # 重名为加后缀
         self.rename(f'{file_name}.{self.suffix}')
         return retval
 
     def start(self):
+        logger.info('开始下载')
         logger.info(f'开始下载：{self.__class__.__name__} - {self.fname}')
         date = time.localtime()
         end_time = None
@@ -202,6 +206,7 @@ class DownloadBase:
             'url': self.url,
             'date': date,
         }
+        
         self.database_row_id = db.add_stream_info(**stream_info)  # 返回数据库中此行记录的 id
 
         while True:
