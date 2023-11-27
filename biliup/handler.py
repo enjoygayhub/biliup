@@ -47,7 +47,7 @@ def process(name, url):
     }
     preprocessor = config['streamers'].get(name, {}).get('preprocessor')
     if preprocessor:
-        processor(preprocessor, json.dumps({
+        runProcessors(preprocessor, json.dumps({
             "name": name,
             "url": url,
             "start_time": int(time.time())
@@ -111,8 +111,8 @@ class KernelFunc:
 
         return url_status
 
-
-def processor(processors, data):
+#  run subprocess cmd with data
+def runProcessors(processors, data):
     for processor in processors:
         if processor.get('run'):
             try:

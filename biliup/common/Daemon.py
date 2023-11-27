@@ -8,7 +8,10 @@ import atexit
 
 logger = logging.getLogger('biliup')
 
-
+# 在这个类中，有一个私有的_daemonize_方法用来实现 daemon 化过程。这个方法首先 fork 出两个子进程，并修改工作目录和设置新的会话连接。然后，将标准输入、输出和错误流重定向到指定的位置。
+# 还有一个_start_方法用来启动守护进程。这个方法先检查 PID 文件是否存在，如果存在则说明守护进程已经运行，否则执行_daemonize_方法后运行指定的函数。
+# 还有一个_stop_方法用来停止守护进程。这个方法先从 PID 文件中获取 PID，然后发送 SIGTERM 信号给相应的进程组，等待一段时间后再次尝试杀死该进程。如果成功则删除 PID 文件；如果失败，则打印错误消息并退出。
+# 最后，还有一个_restart_方法，它首先调用_stop_方法再调用_start_方法，实现守护进程的重启功能。
 # python模拟linux的守护进程
 class Daemon(object):
     def __init__(self, pidfile, fn, change_currentdirectory=False, stdin='/dev/null', stdout='/dev/null',

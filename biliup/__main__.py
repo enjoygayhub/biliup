@@ -11,9 +11,9 @@ import biliup.common.reload
 from biliup.config import config
 from biliup.database import DB as db
 from biliup.downloader import check_url, check_flag
-from . import __version__, LOG_CONF
-from .common.Daemon import Daemon
-from .common.reload import AutoReload
+from biliup import __version__, LOG_CONF
+from biliup.common.Daemon import Daemon
+from biliup.common.reload import AutoReload
 
 
 def arg_parser():
@@ -54,7 +54,7 @@ def arg_parser():
 
 
 async def main(args):
-    from .handler import event_manager
+    from biliup.handler import event_manager
     # 初始化数据库
     db.init()
 
