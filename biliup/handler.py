@@ -25,12 +25,12 @@ def create_event_manager():
     pool2_size = config.get('pool2_size', 3)
     # 初始化事件管理器
     app = EventManager(config, pool1_size=pool1_size, pool2_size=pool2_size)
-    app.context['urls'] = urls
-    app.context['url_status'] = dict.fromkeys(inverted_index, 0)
+    app.context['urls'] = urls # url list
+    app.context['url_status'] = dict.fromkeys(inverted_index, 0) # {'https://www.huya.com/28916544': 0}
     app.context['url_upload_count'] = dict.fromkeys(inverted_index, 0)
     # 正在上传的文件 用于同时上传一个url的时候过滤掉正在上传的
     app.context['upload_filename'] = []
-    app.context['checker'] = Plugin(plugins).sorted_checker(urls)
+    app.context['checker'] = Plugin(plugins).sorted_checker(urls) # {'Huya': <function Huya at 0x...8B4CE6EE0>}
     app.context['inverted_index'] = inverted_index
     app.context['streamer_url'] = streamer_url
     return app

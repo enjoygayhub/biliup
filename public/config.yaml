@@ -176,9 +176,9 @@ check_sourcecode: 15
 ######### 录制主播设置 #########
 streamers:
 ### 最小配置示例
-    星际2Stats拔本神族天梯第一视角:
+    huyaName:
         url:
-            - https://www.twitch.tv/kimdaeyeob3
+            - "https://www.huya.com/28916544"
 ### 完整可选配置示例
     # 星际2INnoVation吕布卫星人族天梯第一视角:
     #     url:

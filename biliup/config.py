@@ -1,13 +1,9 @@
 import json
-import pathlib
+from pathlib import Path
 import shutil
 from collections import UserDict
-
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
-
+import tomli as tomllib
+import os
 
 class Config(UserDict):
     def load_cookies(self):
@@ -22,11 +18,14 @@ class Config(UserDict):
     def load(self, file):
         import yaml
         if file is None:
-            if pathlib.Path('config.yaml').exists():
-                file = open('config.yaml', 'rb')
-            elif pathlib.Path('config.toml').exists():
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            yamlPath = os.path.join(current_dir,"config.yaml")
+            tomlPath = os.path.join(current_dir,"config.toml")
+            if os.path.isfile(yamlPath):
+                file = open(yamlPath, 'rb')
+            elif os.path.isfile(tomlPath):
                 self.data['toml'] = True
-                file = open('config.toml', "rb")
+                file = open(tomlPath, "rb")
             else:
                 raise FileNotFoundError('未找到配置文件，请先创建配置文件')
         with file as stream:
@@ -38,9 +37,9 @@ class Config(UserDict):
     def create_without_config_input(self, file):
         import yaml
         if file is None:
-            if pathlib.Path('config.toml').exists():
+            if Path('config.toml').exists():
                 file = open('config.toml', 'rb')
-            elif pathlib.Path('config.yaml').exists():
+            elif Path('config.yaml').exists():
                 file = open('config.yaml', encoding='utf-8')
             else:
                 try:
