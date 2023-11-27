@@ -176,23 +176,23 @@ check_sourcecode = 15
 
 ######### 录制主播设置 #########
 ### 最小配置示例
-[streamers."星际2Stats拔本神族天梯第一视角"]
-url = ["https://www.twitch.tv/kimdaeyeob3"]
+[streamers."28916544"]
+url = ["https://www.huya.com/28916544"]
 
 ### 完整可选配置示例
-[streamers."星际2INnoVation吕布卫星人族天梯第一视角"]
-url = [
-  "https://www.twitch.tv/innovation_s2",
-  "https://www.panda.tv/1160340"
-] #填写多个url时只能同时下载一个，如需多个同时下载请单独配置
-title = "{title}第一视角%Y-%m-%d{streamer}{url}" ### 自定义标题的时间格式, {title}代表当场直播间标题 {streamer}代表在本config里面设置的主播名称 {url}代表设置的该主播的第一条直播间链接
-tid = 171 ### 投稿分区码,171为电子竞技分区
-copyright = 2 ### 1为自制
+#[streamers."星际2INnoVation吕布卫星人族天梯第一视角"]
+#url = [
+#  "https://www.twitch.tv/innovation_s2",
+#  "https://www.panda.tv/1160340"
+#] #填写多个url时只能同时下载一个，如需多个同时下载请单独配置
+#title = "{title}第一视角%Y-%m-%d{streamer}{url}" ### 自定义标题的时间格式, {title}代表当场直播间标题 {streamer}代表在本config里面设置的主播名称 {url}代表设置的该主播的第一条直播间链接
+#tid = 171 ### 投稿分区码,171为电子竞技分区
+#copyright = 2 ### 1为自制
 #cover_path = "/cover/up.jpg"
 ### 支持strftime, {title}, {streamer}, {url}占位符。
-description = """
-视频简介: {title} %Y-%m-%d %H:%M:%S
-{streamer}主播直播间地址：{url}
+#description = """
+#视频简介: {title} %Y-%m-%d %H:%M:%S
+#{streamer}主播直播间地址：{url}
 ---
 Powered By biliup - Github: https://github.com/ForgQi/biliup"""
 ### 如需在简介中@别人 请使用以下模版
