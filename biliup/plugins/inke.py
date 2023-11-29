@@ -16,7 +16,7 @@ class inke(DownloadBase):
         super().__init__(fname, url, suffix)
 
     def check_stream(self, is_check=False):
-        logger.debug(self.fname)
+        logger.debug(self.name)
         rid = re.search(r'uid=([a-zA-Z0-9]+)', self.url).group(1)
         r1 = requests.get(
             f"https://webapi.busi.inke.cn/web/live_share_pc?uid={rid}",

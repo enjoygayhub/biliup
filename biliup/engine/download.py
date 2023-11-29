@@ -18,9 +18,9 @@ from biliup.plugins import logger
 
 
 class DownloadBase:
-    def __init__(self, fname, url, suffix="flv", opt_args=[]):
+    def __init__(self, name, url, suffix="flv", opt_args=[]):
        
-        self.fname = fname
+        self.name = name
         self.url = url
         self.suffix = suffix
 
@@ -50,7 +50,7 @@ class DownloadBase:
 
     def check_stream(self, is_check=False):
         # is_check 是否是检测可以避免在检测是否可以录制的时候忽略一些耗时的操作
-        logger.debug(self.fname, is_check)
+        logger.debug(self.name, is_check)
         raise NotImplementedError()
 
 
@@ -80,9 +80,8 @@ class DownloadBase:
             self.suffix = 'flv' if '.flv' in parsed_url_path else 'ts'
             logger.warning(f'stream-gears 不支持除 flv 和 ts 以外的格式，已按流自动修正为 {self.suffix} 格式')
 
-        stream_gears_download(self.raw_stream_url, self.fake_headers, filename, config.get('segment_time'),
-                              config.get('file_size'))
-        return True
+        
+        return stream_gears_download(self.raw_stream_url, self.fake_headers, filename)
 
     def streamlink_download(self, filename):  # streamlink+ffmpeg混合下载模式，适用于下载hls流
         streamlink_input_args = ['--stream-segment-threads', '3', '--hls-playlist-reload-attempts', '1']
@@ -157,61 +156,58 @@ class DownloadBase:
             return False
         file_name = self.file_name
         
-        # 开始下载，返回结果
-        retval = self.download(file_name)
+        # 选择下载器，开始下载
+        self.download(file_name)
         # 重名为加后缀
-        self.rename(f'{file_name}.{self.suffix}')
+        newName = f'{file_name}.{self.suffix}'
+        retval = self.rename(newName)
         return retval
 
     def start(self):
         
-        logger.info(f'开始下载：{self.__class__.__name__} - {self.fname}')
+        logger.info(f'开始下载：{self.__class__.__name__} - {self.name}')
         date = time.localtime()
-        end_time = None
 
-        # 重试次数
-        retry_count = 0
-
-        while True:
+        try:
+            ret = self.run()
+        except:
+            logger.exception('Uncaught exception: download error')
             ret = False
-            try:
-                ret = self.run()
-            except:
-                logger.exception('Uncaught exception: download error')
-            finally:
-                self.close()
-            if ret:
-                logger.info('xiazai 完成')
-                break
-            else:
-                logger.info(f'下载失败：{self.__class__.__name__} - {self.fname}，重试次数 {retry_count} ')
-                break
+        finally:
+            self.close()
+        if ret:
+            logger.info('下载完成')
+        else:
+            logger.info(f'下载失败：{self.__class__.__name__} - {self.name} ')
 
-        end_time = time.localtime()
-        logger.info(f'退出下载：{self.__class__.__name__} - {self.fname}')
-        stream_info = {
-            'name': self.fname,
+        
+        resultInfo = {
+            'name': self.name,
             'url': self.url,
             'date': date,
-            'end_time': end_time,
+            'success':ret,
+            'flvName':self.file_name
         }
-        return stream_info
+        return resultInfo
     
     @staticmethod
     def rename(file_name):
         try:
             os.rename(file_name + '.part', file_name)
             logger.info(f'更名 {file_name + ".part"} 为 {file_name}')
+            return True
         except FileNotFoundError:
             logger.debug(f'文件不存在: {file_name}')
+            return False
         except FileExistsError:
             os.rename(file_name + '.part', file_name)
             logger.info(f'更名 {file_name + ".part"} 为 {file_name} 失败, {file_name} 已存在')
+            return False
 
     @property
     def file_name(self):
         
-        filename = f'{self.fname}%Y-%m-%dT%H_%M_%S'
+        filename = f'{self.name}%Y-%m-%dT%H_%M_%S'
         filename = get_valid_filename(filename)
         return time.strftime(filename.encode("unicode-escape").decode()).encode().decode("unicode-escape")
 
@@ -219,19 +215,15 @@ class DownloadBase:
         pass
 
 
-def stream_gears_download(url, headers, file_name, segment_time=None, file_size=None):
+def stream_gears_download(url, headers, file_name, file_size=None):
     class Segment:
         pass
 
     segment = Segment()
-    if segment_time:
-        seg_time = segment_time.split(':')
-        print(int(seg_time[0]) * 60 * 60 + int(seg_time[1]) * 60 + int(seg_time[2]))
-        segment.time = int(seg_time[0]) * 60 * 60 + int(seg_time[1]) * 60 + int(seg_time[2])
+    segment.size = 8 * 1024 * 1024 * 1024
     if file_size:
         segment.size = file_size
-    if file_size is None and segment_time is None:
-        segment.size = 8 * 1024 * 1024 * 1024
+        
     stream_gears.download(
         url,
         headers,

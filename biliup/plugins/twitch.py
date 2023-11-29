@@ -180,7 +180,7 @@ class Twitch(DownloadBase):
             if self.proc is not None:
                 self.proc.terminate()
         except:
-            logger.exception(f'terminate {self.fname} failed')
+            logger.exception(f'terminate {self.name} failed')
 
 
 def post_gql(ops):

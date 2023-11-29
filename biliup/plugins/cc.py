@@ -14,7 +14,7 @@ class CC(DownloadBase):
         super().__init__(fname, url, suffix)
 
     def check_stream(self, is_check=False):
-        logger.debug(self.fname)
+        logger.debug(self.name)
         rid = re.search(r"[0-9]{4,}", self.url).group(0)
         res = requests.get(
             f"https://api.cc.163.com/v1/activitylives/anchor/lives?anchor_ccid={rid}",

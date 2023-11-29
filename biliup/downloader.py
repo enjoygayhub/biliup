@@ -28,7 +28,7 @@ def download(fname, url, **kwargs):
                 if kwargs.get(k):
                     pg.__dict__[k] = kwargs.get(k)
             break
-    pg.check_stream(True)
+    # pg.check_stream(True)
     return pg.start()
 
 

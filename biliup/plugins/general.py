@@ -16,7 +16,7 @@ class YDownload(DownloadBase):
             self.get_sinfo()
             return True
         except yt_dlp.utils.DownloadError:
-            logger.debug('%s未开播或读取下载信息失败' % self.fname)
+            logger.debug('%s未开播或读取下载信息失败' % self.name)
             return False
 
     def get_sinfo(self):
@@ -49,7 +49,7 @@ class SDownload(DownloadBase):
         self.flag = Event()
 
     def check_stream(self, is_check=False):
-        logger.debug(self.fname)
+        logger.debug(self.name)
         import streamlink
         try:
             streams = streamlink.streams(self.url)
@@ -88,7 +88,7 @@ class Generic(DownloadBase):
     # 如果执行过程中出现异常，则将异常捕获并在异常处理程序中，尝试使用 YDownload 和 SDownload 类分别重新检查流，
     # 并将成功的处理器对象赋值给 self.handler 成员变量。如果所有重试都失败，则返回 False ，否则返回 True 。
     def check_stream(self, is_check=False):
-        logger.debug(self.fname)
+        logger.debug(self.name)
         try:
             site, url = url_to_module(self.url)
             info = site.parser(url)
@@ -97,7 +97,7 @@ class Generic(DownloadBase):
             self.raw_stream_url = urls[0]
         # print(info.title)
         except:
-            handlers = [YDownload(self.fname, self.url, 'mp4'), SDownload(self.fname, self.url, 'flv')]
+            handlers = [YDownload(self.name, self.url, 'mp4'), SDownload(self.name, self.url, 'flv')]
             for handler in handlers:
                 if handler.check_stream():
                     self.handler = handler

@@ -51,7 +51,7 @@ class Youtube(DownloadBase):
                 logger.warning(f"{Youtube.__name__}: {self.url}: 获取错误")
                 return False
 
-            cache = KVFileStore(f"./cache/youtube/{self.fname}.txt")
+            cache = KVFileStore(f"./cache/youtube/{self.name}.txt")
 
             def loop_entries(entrie):
                 if type(entrie) is not dict:
