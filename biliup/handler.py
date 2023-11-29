@@ -66,8 +66,7 @@ def process(name, url):
         logger.exception(f"下载错误: {stream_info['name']} - {e}")
     finally:
         # 下载结束
-        # 永远不可能有两个同url的下载线程
-        send_upload_event(stream_info)
+        # send_upload_event(stream_info)
         url_status[url] = 0
 
 

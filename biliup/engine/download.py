@@ -18,29 +18,19 @@ from biliup.plugins import logger
 
 
 class DownloadBase:
-    def __init__(self, fname, url, suffix=None, opt_args=None):
-        self.danmaku = None
-        self.room_title = None
-        if opt_args is None:
-            opt_args = []
-        # 主播单独传参会覆盖全局设置。例如新增了一个全局的filename_prefix参数，在下面添加self.filename_prefix = config.get('filename_prefix'),
-        # 即可通过self.filename_prefix在下载或者上传时候传递主播单独的设置参数用于调用（如果该主播有设置单独参数，将会优先使用单独参数；如无，则会优先你用全局参数。）
+    def __init__(self, fname, url, suffix="flv", opt_args=[]):
+       
         self.fname = fname
         self.url = url
         self.suffix = suffix
-        self.title = None
-        self.live_cover_path = None
-        self.database_row_id = 0
+
         self.downloader = config.get('downloader', 'stream-gears')
         # ffmpeg.exe -i  http://vfile1.grtn.cn/2018/1542/0254/3368/154202543368.ssm/154202543368.m3u8
         # -c copy -bsf:a aac_adtstoasc -movflags +faststart output.mp4
         self.raw_stream_url = None
-        self.filename_prefix = config.get('filename_prefix')
-        self.use_live_cover = config.get('use_live_cover', False)
+       
         self.opt_args = opt_args
-        # 是否是下载模式 跳过下播检测
-        self.is_download = False
-        self.live_cover_url = None
+      
         self.fake_headers = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Encoding': 'gzip, deflate',
@@ -63,29 +53,19 @@ class DownloadBase:
         logger.debug(self.fname, is_check)
         raise NotImplementedError()
 
-    @staticmethod
-    def batch_check(check_urls: List[str]) -> Generator[str, None, None]:
-        # 批量检测直播或下载状态
-        # 返回的是url_list
-        raise NotImplementedError()
 
-    def get_filename(self, is_fmt=False):
-        if self.filename_prefix:  # 判断是否存在自定义录播命名设置
-            filename = (self.filename_prefix.format(streamer=self.fname, title=self.room_title).encode(
-                'unicode-escape').decode()).encode().decode("unicode-escape")
-        else:
-            filename = f'{self.fname}%Y-%m-%dT%H_%M_%S'
-        filename = get_valid_filename(filename)
-        if is_fmt:
-            return time.strftime(filename.encode("unicode-escape").decode()).encode().decode("unicode-escape")
-        else:
-            return filename
+    # def get_filename(self, is_fmt=False):
+        
+    #     filename = f'{self.fname}%Y-%m-%dT%H_%M_%S'
+    #     filename = get_valid_filename(filename)
+    #     if is_fmt:
+    #         return time.strftime(filename.encode("unicode-escape").decode()).encode().decode("unicode-escape")
+    #     else:
+    #         return filename
 
     def download(self, filename):
-        filename = self.get_filename()
+        # filename = self.get_filename()
         fmtname = time.strftime(filename.encode("unicode-escape").decode()).encode().decode("unicode-escape")
-
-        self.danmaku_download_start(fmtname)
 
         parsed_url_path = urlparse(self.raw_stream_url).path
         if self.downloader == 'streamlink':
@@ -171,17 +151,12 @@ class DownloadBase:
             return False
         return True
 
-    def danmaku_download_start(self, filename):
-        pass
 
     def run(self):
         if not self.check_stream():
             return False
         file_name = self.file_name
-        # 将文件名和直播标题存储到数据库
         
-        db.update_file_list(self.database_row_id, file_name)
-        db.update_room_title(self.database_row_id, self.room_title)
         # 开始下载，返回结果
         retval = self.download(file_name)
         # 重名为加后缀
@@ -189,136 +164,39 @@ class DownloadBase:
         return retval
 
     def start(self):
-        logger.info('开始下载')
+        
         logger.info(f'开始下载：{self.__class__.__name__} - {self.fname}')
         date = time.localtime()
         end_time = None
-        delay = int(config.get('delay', 0))
+
         # 重试次数
         retry_count = 0
-        # delay 重试次数
-        retry_count_delay = 0
-        # delay 总重试次数 向上取整
-        delay_all_retry_count = -(-delay // 60)
-
-        stream_info = {
-            'name': self.fname,
-            'url': self.url,
-            'date': date,
-        }
-        
-        self.database_row_id = db.add_stream_info(**stream_info)  # 返回数据库中此行记录的 id
 
         while True:
             ret = False
             try:
                 ret = self.run()
             except:
-                logger.exception('Uncaught exception:')
+                logger.exception('Uncaught exception: download error')
             finally:
                 self.close()
             if ret:
-                if self.is_download:
-                    # 成功下载后也不检测下一个需要下载的视频而是先上传等待下次检测保证上传时使用下载视频的标题
-                    # 开启边录边传会快些
-                    break
-                # 成功下载重置重试次数
-                retry_count = 0
-                retry_count_delay = 0
+                logger.info('xiazai 完成')
+                break
             else:
-                if self.is_download:
-                    # 下载模式如果下载失败直接跳出
-                    break
+                logger.info(f'下载失败：{self.__class__.__name__} - {self.fname}，重试次数 {retry_count} ')
+                break
 
-                if retry_count < 3:
-                    retry_count += 1
-                    logger.info(
-                        f'获取流失败：{self.__class__.__name__} - {self.fname}，重试次数 {retry_count} / 3，等待 10 秒')
-                    time.sleep(10)
-                    continue
-
-                if delay:
-                    retry_count_delay += 1
-                    if retry_count_delay > delay_all_retry_count:
-                        logger.info(f'下播延迟检测结束：{self.__class__.__name__}:{self.fname}')
-                        break
-                    else:
-                        if delay < 60:
-                            logger.info(
-                                f'下播延迟检测：{self.__class__.__name__} - {self.fname}，将在 {delay} 秒后检测开播状态')
-                            time.sleep(delay)
-                        else:
-                            if retry_count_delay == 1:
-                                end_time = time.localtime()
-                                # 只有第一次显示
-                                logger.info(
-                                    f'下播延迟检测：{self.__class__.__name__} - {self.fname}，每隔 60 秒检测开播状态，共检测 {delay_all_retry_count} 次')
-                            time.sleep(60)
-                        continue
-                else:
-                    end_time = time.localtime()
-                    break
-
-        if end_time is None:
-            end_time = time.localtime()
-        self.download_cover(time.strftime(self.get_filename().encode("unicode-escape").decode(), date).encode().decode("unicode-escape"))
-        # 更新数据库中封面存储路径
-        db.update_cover_path(self.database_row_id, self.live_cover_path)
+        end_time = time.localtime()
         logger.info(f'退出下载：{self.__class__.__name__} - {self.fname}')
         stream_info = {
             'name': self.fname,
             'url': self.url,
-            'title': self.room_title,
             'date': date,
-            'live_cover_path': self.live_cover_path,
-            'is_download': self.is_download,
-            # 内部使用时间戳传递
             'end_time': end_time,
         }
         return stream_info
-
-    def download_cover(self, fmtname):
-        # 获取封面
-        if self.use_live_cover and self.live_cover_url is not None:
-            try:
-                save_dir = f'cover/{self.__class__.__name__}/{self.fname}/'
-                if not os.path.exists(save_dir):
-                    os.makedirs(save_dir)
-
-                url_path = urlparse(self.live_cover_url).path
-                suffix = None
-                if '.jpg' in url_path:
-                    suffix = 'jpg'
-                elif '.png' in url_path:
-                    suffix = 'png'
-                elif '.webp' in url_path:
-                    suffix = 'webp'
-
-                if suffix:
-                    live_cover_path = f'{save_dir}{fmtname}.{suffix}'
-                    if os.path.exists(live_cover_path):
-                        self.live_cover_path = live_cover_path
-                    else:
-                        response = requests.get(self.live_cover_url, headers=self.fake_headers, timeout=30)
-                        with open(live_cover_path, 'wb') as f:
-                            f.write(response.content)
-
-                    if suffix == 'webp':
-                        with Image.open(live_cover_path) as img:
-                            img = img.convert('RGB')
-                            img.save(f'{save_dir}{fmtname}.jpg', format='JPEG')
-                        os.remove(live_cover_path)
-                        live_cover_path = f'{save_dir}{fmtname}.jpg'
-
-                    self.live_cover_path = live_cover_path
-                    logger.info(
-                        f'封面下载成功：{self.__class__.__name__} - {self.fname}：{os.path.abspath(self.live_cover_path)}')
-                else:
-                    logger.warning(
-                        f'封面下载失败：{self.__class__.__name__} - {self.fname}：封面格式不支持：{self.live_cover_url}')
-            except:
-                logger.exception(f'封面下载失败：{self.__class__.__name__} - {self.fname}')
-
+    
     @staticmethod
     def rename(file_name):
         try:
@@ -332,11 +210,8 @@ class DownloadBase:
 
     @property
     def file_name(self):
-        if self.filename_prefix:  # 判断是否存在自定义录播命名设置
-            filename = (self.filename_prefix.format(streamer=self.fname, title=self.room_title).encode(
-                'unicode-escape').decode()).encode().decode("unicode-escape")
-        else:
-            filename = f'{self.fname}%Y-%m-%dT%H_%M_%S'
+        
+        filename = f'{self.fname}%Y-%m-%dT%H_%M_%S'
         filename = get_valid_filename(filename)
         return time.strftime(filename.encode("unicode-escape").decode()).encode().decode("unicode-escape")
 

@@ -41,6 +41,7 @@ class Huya(DownloadBase):
             return False
 
         if '"eLiveStatus":2' not in res.text:
+            logger.warning(f"{Huya.__name__}: {self.url}: 没开播")
             # 没开播
             return False
 
@@ -93,6 +94,7 @@ class Huya(DownloadBase):
 
                 self.room_title = live_info['sIntroduction']
                 self.raw_stream_url = f'{stream_selected["sFlvUrl"]}/{stream_selected["sStreamName"]}.{stream_selected["sFlvUrlSuffix"]}?wsSecret={ws_secret}&wsTime={ws_time}&seqid={seq_id}&ctype={url_query["ctype"][0]}&ver=1&fs={url_query["fs"][0]}&t={url_query["t"][0]}&uid={uid}&ratio={record_ratio}'
+                logger.info(f'raw_stream_url: {self.raw_stream_url}')
                 return True
             except:
                 logger.warning(f"{Huya.__name__}: {self.url}: 解析错误")
