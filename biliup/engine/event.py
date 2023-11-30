@@ -52,18 +52,18 @@ class EventManager(Thread):
         for handler in self.__handlers[event.type_]:
             if handler.__qualname__ in self.__block:
                 future =self._pool.get(handler.pool).submit(handler, event)
-                try:
-                    timeOut = self.context.get("videoDuration",300)
-                    result = future.result(timeout = +timeOut)
-                    logger.info(result)
-                except concurrent.futures.TimeoutError:
-                    while True:
-                        if future.cancel():
-                            print("Task was successfully cancelled.")
-                            break
-                        else:
-                            print("Task could not be cancelled or has already completed.")
-                            time.sleep(5)
+                # try:
+                #     timeOut = self.context.get("videoDuration",300)
+                #     result = future.result(timeout = +timeOut)
+                #     logger.info(result)
+                # except concurrent.futures.TimeoutError:
+                #     while True:
+                #         if future.cancel():
+                #             print("Task was successfully cancelled.")
+                #             break
+                #         else:
+                #             print("Task could not be cancelled or has already completed.")
+                #             time.sleep(5)
                      
             else:
                 handler(event)

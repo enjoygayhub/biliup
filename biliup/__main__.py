@@ -34,11 +34,12 @@ async def main():
         new_thread.start()
         # download(urlMapName[url], url)
     
-    runMinute = config.get("runMinute",10)
+    runMinute = config.get("runMinute",1)
     logger.info('主进程挂起！')
-    time.sleep(runMinute*60)  
+    time.sleep(runMinute*60)
+    logger.info('stop event_manager') 
     event_manager.stop()
-    logger.info('stop event_manager')
+    
 
 if __name__ == '__main__':
     
