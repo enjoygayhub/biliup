@@ -19,11 +19,10 @@ from downloader import download
 
 
 async def main():
-    # from biliup.handler import event_manager
-    # 初始化数据库
-    # db.init()
-    
-    # event_manager.start()
+    from biliup.handler import event_manager
+
+    event_manager.start()
+
     nameMapUrl = {k: v['url'] for k, v in config['streamers'].items()}
     urlMapName = { value:key for key, value in nameMapUrl.items() }
     urls = list(urlMapName.keys())
@@ -34,8 +33,10 @@ async def main():
         # new_thread = threading.Thread(target=check_url, args=(checkerPlugins[plugin],))
         # new_thread.start()
         download(urlMapName[url], url)
-    
 
+    runMinute = config.get("runMinute",1)
+    time.sleep(runMinute*60*1000)  
+    event_manager.stop()
 
 if __name__ == '__main__':
     

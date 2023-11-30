@@ -6,33 +6,30 @@ import json
 
 from . import plugins
 from .common.tools import NamedLock
-from .downloader import download, send_upload_event
+from .downloader import download
 from .engine import invert_dict, Plugin
 from biliup.config import config
 from .engine.event import EventManager
 from .uploader import upload
 
 DOWNLOAD = 'download'
-UPLOAD = 'upload'
+
 logger = logging.getLogger('biliup')
 
 
 def create_event_manager():
-    streamer_url = {k: v['url'] for k, v in config['streamers'].items()}
-    inverted_index = invert_dict(streamer_url)
-    urls = list(inverted_index.keys())
+    
+    nameMapUrl = {k: v['url'] for k, v in config['streamers'].items()}
+    urlMapName = { value:key for key, value in nameMapUrl.items() }
+    # urls = list(urlMapName.keys())
     pool1_size = config.get('pool1_size', 3)
-    pool2_size = config.get('pool2_size', 3)
+    
     # 初始化事件管理器
-    app = EventManager(config, pool1_size=pool1_size, pool2_size=pool2_size)
-    app.context['urls'] = urls # url list
-    app.context['url_status'] = dict.fromkeys(inverted_index, 0) # {'https://www.huya.com/28916544': 0}
-    app.context['url_upload_count'] = dict.fromkeys(inverted_index, 0)
+    app = EventManager(config, pool1_size=pool1_size)
+    
     # 正在上传的文件 用于同时上传一个url的时候过滤掉正在上传的
-    app.context['upload_filename'] = []
-    app.context['checker'] = Plugin(plugins).sorted_checker(urls) # {'Huya': <function Huya at 0x...8B4CE6EE0>}
-    app.context['inverted_index'] = inverted_index
-    app.context['streamer_url'] = streamer_url
+    app.context['inverted_index'] = urlMapName
+    app.context['streamer_url'] = nameMapUrl
     return app
 
 
@@ -41,49 +38,31 @@ event_manager = create_event_manager()
 
 @event_manager.register(DOWNLOAD, block='Asynchronous1')
 def process(name, url):
-    stream_info = {
-        'name': name,
-        'url': url,
-    }
-    preprocessor = config['streamers'].get(name, {}).get('preprocessor')
-    if preprocessor:
-        runProcessors(preprocessor, json.dumps({
-            "name": name,
-            "url": url,
-            "start_time": int(time.time())
-        }, ensure_ascii=False))
-
-    url_status = event_manager.context['url_status']
+   
     # 下载开始
     try:
-        kwargs: dict = config['streamers'][name].copy()
-        kwargs.pop('url')
-        suffix = kwargs.get('format')
-        if suffix:
-            kwargs['suffix'] = suffix
-        stream_info = download(name, url, **kwargs)
+        stream_info = download(name, url)
     except Exception as e:
-        logger.exception(f"下载错误: {stream_info['name']} - {e}")
+        logger.exception(f"下载错误: {name} - {e}")
     finally:
         # 下载结束
-        # send_upload_event(stream_info)
-        url_status[url] = 0
+        pass
 
 
-@event_manager.register(UPLOAD, block='Asynchronous2')
-def process_upload(stream_info):
-    url = stream_info['url']
-    url_upload_count = event_manager.context['url_upload_count']
-    # 上传开始
-    try:
-        upload(stream_info)
-    except Exception as e:
-        logger.exception(f"上传错误: {stream_info['name']} - {e}")
-    finally:
-        # 上传结束
-        # 有可能有两个同url的上传线程 保证计数正确
-        with NamedLock(f'upload_count_{url}'):
-            url_upload_count[url] -= 1
+# @event_manager.register('upload', block='Asynchronous2')
+# def process_upload(stream_info):
+#     url = stream_info['url']
+#     url_upload_count = event_manager.context['url_upload_count']
+#     # 上传开始
+#     try:
+#         upload(stream_info)
+#     except Exception as e:
+#         logger.exception(f"上传错误: {stream_info['name']} - {e}")
+#     finally:
+#         # 上传结束
+#         # 有可能有两个同url的上传线程 保证计数正确
+#         with NamedLock(f'upload_count_{url}'):
+#             url_upload_count[url] -= 1
 
 
 @event_manager.server()

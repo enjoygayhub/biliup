@@ -10,11 +10,10 @@ import functools
 
 
 class EventManager(Thread):
-    def __init__(self, context=None, pool1_size=3, pool2_size=3):
+    def __init__(self, context, pool1_size=3):
         """初始化事件管理器"""
         super().__init__(name='Synchronous', daemon=True)
-        if context is None:
-            context = {}
+        
         self.context = context
         # 事件对象列表
         self.__eventQueue = Queue()
@@ -23,7 +22,6 @@ class EventManager(Thread):
         # 事件处理线程池1
         self._pool = {
             'Asynchronous1': ThreadPoolExecutor(pool1_size, thread_name_prefix='Asynchronous1'),
-            'Asynchronous2': ThreadPoolExecutor(pool2_size, thread_name_prefix='Asynchronous2')
         }
         # 阻塞函数列表
         self.__block = []
