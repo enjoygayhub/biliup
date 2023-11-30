@@ -54,6 +54,6 @@ if __name__ == '__main__':
     logger.info('start main:')
     
     asyncio.run(main()) 
-    # args.func()
+    runMinute = config.get("runMinute",1)
     
-    time.sleep(10*1000)   
+    time.sleep(runMinute*60*1000)   
