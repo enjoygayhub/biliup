@@ -40,13 +40,16 @@ class Huya(DownloadBase):
             logger.warning(f"{Huya.__name__}: {self.url}: 直播间地址错误")
             return False
 
+        live_info = json.loads(res.text.split('"tLiveInfo":')[1].split(',"_classname":"LiveRoom.LiveInfo"}')[0] + '}')
         if '"eLiveStatus":2' not in res.text:
-            logger.warning(f"{Huya.__name__}: {self.url}: 没开播")
+            logger.warning(f"{Huya.__name__}: {self.url}: 没开播,不下载")
             # 没开播
             return False
-
-        live_info = json.loads(res.text.split('"tLiveInfo":')[1].split(',"_classname":"LiveRoom.LiveInfo"}')[0] + '}')
+        
         if live_info:
+            if live_info["iLiveSourceType"] == 10:
+                logger.warning(f"{self.url}: 没视频流,不下载")
+                return False
             try:
                 # 最大录制码率
                 huya_max_ratio = config.get('huya_max_ratio', 8000)

@@ -22,7 +22,7 @@ def create_event_manager():
     nameMapUrl = {k: v['url'] for k, v in config['streamers'].items()}
     urlMapName = { value:key for key, value in nameMapUrl.items() }
     # urls = list(urlMapName.keys())
-    pool1_size = config.get('pool1_size', 3)
+    pool1_size = config.get('pool1_size', 2)
     
     # 初始化事件管理器
     app = EventManager(config, pool1_size=pool1_size)
@@ -42,6 +42,7 @@ def process(name, url):
     # 下载开始
     try:
         stream_info = download(name, url)
+        logger.info(stream_info)
     except Exception as e:
         logger.exception(f"下载错误: {name} - {e}")
     finally:
@@ -63,31 +64,6 @@ def process(name, url):
 #         # 有可能有两个同url的上传线程 保证计数正确
 #         with NamedLock(f'upload_count_{url}'):
 #             url_upload_count[url] -= 1
-
-
-@event_manager.server()
-class KernelFunc:
-    def __init__(self, urls, url_status: dict, url_upload_count: dict, checker, inverted_index, streamer_url):
-        self.urls = urls
-        # 录制状态 0等待录制 1正在录制 2正在上传(废弃)
-        self.url_status = url_status
-        # 上传状态 0未上传 >=1正在上传
-        self.url_upload_count = url_upload_count
-        self.checker = checker
-        self.inverted_index = inverted_index
-        self.streamer_url = streamer_url
-
-    def get_url_status(self):
-        # 这里是为webui准备的
-        # webui fix
-        url_status = copy.deepcopy(self.url_status)
-
-        # 上传的情况下修改status 2
-        for url in self.url_upload_count:
-            if self.url_upload_count[url] > 0:
-                url_status[url] = 2
-
-        return url_status
 
 #  run subprocess cmd with data
 def runProcessors(processors, data):

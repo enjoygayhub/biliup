@@ -157,10 +157,10 @@ class DownloadBase:
         file_name = self.file_name
         
         # 选择下载器，开始下载
-        self.download(file_name)
+        retval = self.download(file_name)
         # 重名为加后缀
-        newName = f'{file_name}.{self.suffix}'
-        retval = self.rename(newName)
+        # newName = f'{file_name}.{self.suffix}'
+        # retval = self.rename(newName)
         return retval
 
     def start(self):
@@ -175,16 +175,11 @@ class DownloadBase:
             ret = False
         finally:
             self.close()
-        if ret:
-            logger.info('下载完成')
-        else:
-            logger.info(f'下载失败：{self.__class__.__name__} - {self.name} ')
 
         
         resultInfo = {
             'name': self.name,
             'url': self.url,
-            'date': date,
             'success':ret,
             'flvName':self.file_name
         }

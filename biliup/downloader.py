@@ -6,7 +6,7 @@ from urllib.error import HTTPError
 # from .common.tools import NamedLock
 from biliup.engine.decorators import Plugin
 from biliup.engine.download import DownloadBase
-# from .engine.event import Event
+from biliup.engine.event import Event
 from biliup.plugins import general
 # from biliup.config import config
 from biliup.common import logger
@@ -14,12 +14,13 @@ from biliup import plugins
 
 
 check_flag = threading.Event()
+Plugin(plugins)
 
 def download(fname, url, **kwargs):
     # 根据传入的文件名 fname 和 URL url 调用 general.__plugin__ 方法获取通用插件对象 pg 。
     logger.info("choose plugin!")
     pg = general.__plugin__(fname, url)
-    Plugin(plugins)
+    
     # 然后遍历 Plugin.download_plugins 中的所有插件，若存在一个插件的 VALID_URL_BASE 正则表达式匹配 URL url ，则实例化这个插件并将其赋值给 pg
     for plugin in Plugin.download_plugins:
         if re.match(plugin.VALID_URL_BASE, url):
@@ -30,6 +31,7 @@ def download(fname, url, **kwargs):
             break
     # pg.check_stream(True)
     return pg.start()
+
 
 
 # def check_url(checker):
@@ -81,6 +83,9 @@ def download(fname, url, **kwargs):
 #         # 除了单个检测异常 其他异常会影响整体 直接略过本次 等待下次整体检测
 #         logger.exception("Uncaught exception:")
 
+def sendDownload(name,url):
+    from biliup.handler import event_manager, DOWNLOAD
+    event_manager.send_event(Event(DOWNLOAD, args=(name, url,)))
 
 
 # def send_download_event(name, url):

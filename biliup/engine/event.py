@@ -7,6 +7,9 @@ from dataclasses import dataclass, field
 from queue import Queue
 from threading import *
 import functools
+import concurrent.futures
+import time
+from biliup.common import logger
 
 
 class EventManager(Thread):
@@ -31,6 +34,8 @@ class EventManager(Thread):
         self.__handlers = {}
 
         self.__method = {}
+        
+
 
     def run(self):
         while self.__active:
@@ -46,7 +51,20 @@ class EventManager(Thread):
         # 若存在，则按顺序将事件传递给处理函数执行
         for handler in self.__handlers[event.type_]:
             if handler.__qualname__ in self.__block:
-                self._pool.get(handler.pool).submit(handler, event)
+                future =self._pool.get(handler.pool).submit(handler, event)
+                try:
+                    timeOut = self.context.get("videoDuration",300)
+                    result = future.result(timeout = +timeOut)
+                    logger.info(result)
+                except concurrent.futures.TimeoutError:
+                    while True:
+                        if future.cancel():
+                            print("Task was successfully cancelled.")
+                            break
+                        else:
+                            print("Task could not be cancelled or has already completed.")
+                            time.sleep(5)
+                     
             else:
                 handler(event)
 
@@ -135,22 +153,6 @@ class EventManager(Thread):
 
                 wrapper.pool = block
                 return wrapper
-        return decorator
-
-    def server(self):
-        def decorator(cls):
-            sig = inspect.signature(cls)
-            kwargs = {}
-            for k in sig.parameters:
-                kwargs[k] = self.context[k]
-            instance = cls(**kwargs)
-            self.context[cls.__name__] = instance
-            for type_ in self.__method:
-                for handler in self.__method[type_]:
-                    self.add_event_listener(type_, getattr(instance, handler))
-            self.__method.clear()
-            return cls
-
         return decorator
 
 

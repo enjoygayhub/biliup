@@ -15,7 +15,7 @@ from biliup.common.Daemon import Daemon
 from biliup import plugins
 from biliup.common import logger
 from biliup.engine import invert_dict, Plugin
-from downloader import download
+from downloader import download, sendDownload
 
 
 async def main():
@@ -29,14 +29,16 @@ async def main():
         
     for url in urls:
         # 线程数量是固定的在开始运行的时候创建不会产生变化也不会闲置或者复用线程 所以无需使用线程池
-        # 这里也无需使用异步方法 一个线程一个检测 异步方法让渡控制权没用
-        # new_thread = threading.Thread(target=check_url, args=(checkerPlugins[plugin],))
-        # new_thread.start()
-        download(urlMapName[url], url)
-
-    runMinute = config.get("runMinute",1)
-    time.sleep(runMinute*60*1000)  
+       
+        new_thread = threading.Thread(target=sendDownload, args=(urlMapName[url], url,))
+        new_thread.start()
+        # download(urlMapName[url], url)
+    
+    runMinute = config.get("runMinute",10)
+    logger.info('主进程挂起！')
+    time.sleep(runMinute*60)  
     event_manager.stop()
+    logger.info('stop event_manager')
 
 if __name__ == '__main__':
     
@@ -55,6 +57,6 @@ if __name__ == '__main__':
     logger.info('start main:')
     
     asyncio.run(main()) 
-    runMinute = config.get("runMinute",1)
     
-    time.sleep(runMinute*60*1000)   
+   
+    logger.info('end main exe')   
