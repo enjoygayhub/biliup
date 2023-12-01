@@ -74,7 +74,7 @@ class EventManager(Thread):
         self.__active = False
         self.__eventQueue.put(None)
         for pool in self._pool.values():
-            pool.shutdown()
+            pool.shutdown(wait=False)
 
     def add_event_listener(self, type_, handler):
         """绑定事件和监听器处理函数"""

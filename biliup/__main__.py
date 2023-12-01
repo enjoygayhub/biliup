@@ -5,6 +5,7 @@ import asyncio
 import logging.config
 import platform
 import shutil
+import sys
 import threading
 import time
 import biliup.common.reload
@@ -40,24 +41,24 @@ async def main():
     logger.info('stop event_manager') 
     event_manager.stop()
     
+    
 
 if __name__ == '__main__':
     
     # daemon = Daemon('watch_process.pid', lambda: main())
-    parser = argparse.ArgumentParser(description='Stream download')
-    parser.add_argument('--version', action='version', version=f"v{__version__}")
-    parser.add_argument('--configPath', type=argparse.FileType(mode='rb'),
-                        help='Location of the configuration file (default "./config.yaml")')
+    # parser = argparse.ArgumentParser(description='Stream download')
+    # parser.add_argument('--version', action='version', version=f"v{__version__}")
+    # parser.add_argument('--configPath', type=argparse.FileType(mode='rb'),
+    #                     help='Location of the configuration file (default "./config.yaml")')
 
-    args = parser.parse_args()
+    # args = parser.parse_args()
    
-    config.load(args.configPath)
+    config.load()
 
     logging.config.dictConfig(LOG_CONF)
     
     logger.info('start main:')
     
     asyncio.run(main()) 
-    
-   
+    # main()
     logger.info('end main exe')   

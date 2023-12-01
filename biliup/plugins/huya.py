@@ -98,7 +98,7 @@ class Huya(DownloadBase):
 
                 
                 self.raw_stream_url = f'{stream_selected["sFlvUrl"]}/{stream_selected["sStreamName"]}.{stream_selected["sFlvUrlSuffix"]}?wsSecret={ws_secret}&wsTime={ws_time}&seqid={seq_id}&ctype={url_query["ctype"][0]}&ver=1&fs={url_query["fs"][0]}&t={url_query["t"][0]}&uid={uid}&ratio={record_ratio}'
-                logger.info(f'raw_stream_url: {self.raw_stream_url}')
+                # logger.info(f'raw_stream_url: {self.raw_stream_url}')
                 return True
             except:
                 logger.warning(f"{Huya.__name__}: {self.url}: 解析错误")
