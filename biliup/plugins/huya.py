@@ -22,6 +22,7 @@ class Huya(DownloadBase):
         self.fake_headers['User-Agent'] = 'Mozilla/5.0 (Linux; Android 10; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Mobile Safari/537.36'
 
     def check_stream(self, is_check=False):
+        
         try:
             room_id = self.url.split('huya.com/')[1].split('/')[0].split('?')[0]
             if not room_id:

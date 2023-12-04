@@ -152,17 +152,20 @@ class DownloadBase:
 
 
     def run(self):
-        if not self.check_stream():
+        hasStreamUrl = True
+        if not self.raw_stream_url:
+            hasStreamUrl = self.check_stream()
+        if hasStreamUrl:
+            file_name = self.file_name
+            # 选择下载器，开始下载
+            retval = self.download(file_name)
+            # 重名为加后缀
+            # newName = f'{file_name}.{self.suffix}'
+            # retval = self.rename(newName)
+            return retval
+        else:
             return False
-        file_name = self.file_name
         
-        # 选择下载器，开始下载
-        retval = self.download(file_name)
-        # 重名为加后缀
-        # newName = f'{file_name}.{self.suffix}'
-        # retval = self.rename(newName)
-        return retval
-
     def start(self):
         
         logger.info(f'开始下载：{self.__class__.__name__} - {self.name}')
