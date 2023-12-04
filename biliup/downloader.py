@@ -18,7 +18,7 @@ Plugin(plugins)
 
 def download(fname, url, **kwargs):
     # 根据传入的文件名 fname 和 URL url 调用 general.__plugin__ 方法获取通用插件对象 pg 。
-    logger.info("choose plugin!")
+    # logger.info("choose plugin!")
     pg = general.__plugin__(fname, url)
     
     # 然后遍历 Plugin.download_plugins 中的所有插件，若存在一个插件的 VALID_URL_BASE 正则表达式匹配 URL url ，则实例化这个插件并将其赋值给 pg

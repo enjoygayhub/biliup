@@ -27,9 +27,9 @@ def main():
         plugin = getDownloader(urlMapName[url], url)
         
         has_stream = plugin.check_stream()
-        plugin.start()
+        
         if has_stream:
-            p = multiprocessing.Process(target=plugin.start)
+            p = multiprocessing.Process(target=download,args=(urlMapName[url], url,))
             p.start()
             processes.append(p)
             pool_size += 1
@@ -49,8 +49,6 @@ def main():
         for p in processes:
             p.terminate()  # 终止子进程
     
-def setDownloader(obj):
-    return obj.start()
 
 def getDownloader(fname, url):
     # 根据传入的文件名 fname 和 URL url 调用 general.__plugin__ 方法获取通用插件对象 pg 。
