@@ -3,6 +3,7 @@
 .gitattributes
 *.pyc
 *.flv
+*.jpg
 *.mp4
 *.part
 backup
