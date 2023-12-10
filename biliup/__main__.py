@@ -19,8 +19,8 @@ def main():
     nameMapUrl = {k: v['url'] for k, v in config['streamers'].items()}
     urlMapName = { value:key for key, value in nameMapUrl.items() }
     urls = list(urlMapName.keys())
-    max_pool = config.get("max_process",1)
-    duration = config.get("video_duration",240)
+    max_pool = config.get("max_process",4)
+    duration = config.get("video_duration",400)
     processes = []
     pool_size = 0
     for url in urls:
