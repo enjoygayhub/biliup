@@ -20,7 +20,7 @@ def main():
     urlMapName = { value:key for key, value in nameMapUrl.items() }
     urls = list(urlMapName.keys())
     max_pool = config.get("max_process",4)
-    duration = config.get("video_duration",400)
+    duration = config.get("video_duration",200)
     processes = []
     pool_size = 0
     for url in urls:

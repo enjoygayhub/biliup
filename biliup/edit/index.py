@@ -53,8 +53,8 @@ if __name__ == '__main__':
    
    for file in all_flv:
        asyncio.run(toMp4(file,output_folder)) 
-#    for file in all_flv:
-#         os.remove(file)
+   for file in all_flv:
+        os.remove(file)
    
 
 
