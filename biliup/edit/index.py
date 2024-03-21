@@ -46,7 +46,7 @@ async def toMp4(input,output):
 if __name__ == '__main__':
    # 读取E盘根目录下名为"my_folder"的文件夹里的所有文件
    folder_path = "E:\\biliup"
-   output_folder = "F:\\videos"
+   output_folder = "F:\\video"
    all_part = read_files_in_folder(folder_path)
    rename_parts(all_part)
    all_flv = read_files_in_folder(folder_path,'flv')
