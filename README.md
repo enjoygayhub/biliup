@@ -48,14 +48,6 @@ sudo docker exec -it imageId /bin/bash
 * 下载源码: `git clone https://github.com/ForgQi/bilibiliupload.git`
 * 安装: `pip3 install -e .`
 * 启动: `python3 -m biliup`
-* 构建:
-  ```shell
-  $ npm install
-  $ npm run build
-  $ python3 -m build
-  ```
-
-
 
 
 ### 下载

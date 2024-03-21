@@ -12,7 +12,7 @@ import requests
 from biliup.config import config
 from biliup import __version__, LOG_CONF
 from biliup.common import logger
-from downloader import download
+from biliup.downloader import download
 from biliup.plugins import general
 from biliup import plugins
 from biliup.engine.decorators import Plugin
@@ -34,8 +34,8 @@ def main():
         downloadUrls(nameMapUrl,max_pool,duration)
     
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    flv_dir = os.path.join(current_dir, '../')
-    transform_parts_to_mp4(flv_dir)
+    # flv_dir = os.path.join(current_dir, '../')
+    transform_parts_to_mp4(current_dir)
     
     
 def downloadUrls(nameMapUrl,max_pool,duration):
@@ -114,4 +114,4 @@ if __name__ == '__main__':
     main()
     logger.info('end wait')  
     time.sleep(20)
-    logger.info('end main exe')   
+    logger.info('搞定了')   

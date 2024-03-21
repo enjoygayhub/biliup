@@ -1,2 +1,2 @@
-python -m biliup.__main__
+python main.py
 timeout /t 10 > nul
