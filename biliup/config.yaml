@@ -1,0 +1,7 @@
+run_duration: 120
+video_duration: 120
+max_process: 3
+streamers:
+    nameTwo: https://www.huya.com/535937
+    nameThree: https://www.huya.com/89523
+    nameFour: https://www.huya.com/92421

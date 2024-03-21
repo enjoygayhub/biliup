@@ -7,11 +7,12 @@
 *.mp4
 *.part
 backup
-venv./
-.venv/
+venv
+__pycache__
+
 pdm.lock
 .pdm-python
-config*.yaml
+
 !public/config.yaml
 /configlog.ini
 ds_update.log*

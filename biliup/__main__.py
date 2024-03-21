@@ -4,8 +4,11 @@ import argparse
 import asyncio
 import logging.config
 import multiprocessing
+import os
 import time
 import re
+
+import requests
 from biliup.config import config
 from biliup import __version__, LOG_CONF
 from biliup.common import logger
@@ -13,23 +16,39 @@ from downloader import download
 from biliup.plugins import general
 from biliup import plugins
 from biliup.engine.decorators import Plugin
+from biliup.transformat import transform_parts_to_mp4
 
 def main():
     Plugin(plugins)
-    nameMapUrl = {k: v['url'] for k, v in config['streamers'].items()}
-    urlMapName = { value:key for key, value in nameMapUrl.items() }
-    urls = list(urlMapName.keys())
-    max_pool = config.get("max_process",4)
+    max_pool = config.get("max_process",3)
     duration = config.get("video_duration",200)
+    run_duration = config.get("run_duration",200)
+    
+    # 读取配置文件
+    nameMapUrl = config['streamers']
+    loopTimes = run_duration//duration
+    
+    for _ in range(loopTimes):
+        onlineRooms = getOnlineRooms(max_pool)
+        nameMapUrl = onlineRooms if onlineRooms else nameMapUrl
+        downloadUrls(nameMapUrl,max_pool,duration)
+    
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    flv_dir = os.path.join(current_dir, '../')
+    transform_parts_to_mp4(flv_dir)
+    
+    
+def downloadUrls(nameMapUrl,max_pool,duration):
+    
     processes = []
     pool_size = 0
-    for url in urls:
-        plugin = getDownloader(urlMapName[url], url)
+    for name, url in nameMapUrl.items():
+        plugin = getDownloader(name, url)
         
         has_stream = plugin.check_stream()
         
         if has_stream:
-            p = multiprocessing.Process(target=download,args=(urlMapName[url], url,))
+            p = multiprocessing.Process(target=download,args=(name, url,))
             p.start()
             processes.append(p)
             pool_size += 1
@@ -48,7 +67,6 @@ def main():
         logger.info('终止子进程')
         for p in processes:
             p.terminate()  # 终止子进程
-    
 
 def getDownloader(fname, url):
     # 根据传入的文件名 fname 和 URL url 调用 general.__plugin__ 方法获取通用插件对象 pg 。
@@ -63,6 +81,27 @@ def getDownloader(fname, url):
     return pg
 # def split_array(arr):
 #     return [arr[i:i+3] for i in range(0, len(arr), 3)]
+
+def getOnlineRooms(max_pool):
+    fake_headers = {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Encoding': 'gzip, deflate',
+            'Accept-Language': 'zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3',
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 10; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Mobile Safari/537.36',
+        }
+    target ='https://live.huya.com/liveHttpUI/getTmpLiveList?iTmpId=116&iPageNo=1&iPageSize=20&iLibId=122&iGid=1663'
+    try:
+        res = requests.get(target, timeout=5,headers=fake_headers)
+        res.close()
+        resData = res.json()
+        topItems = resData['vList'][:max_pool]
+        nameUrls = {item['sNick']: f"https://www.huya.com/{item['lProfileRoom']}" for item in topItems}
+        
+    except:
+        logger.warning(f"获取错误")
+        return None
+    
+    return nameUrls
 
 if __name__ == '__main__':
    

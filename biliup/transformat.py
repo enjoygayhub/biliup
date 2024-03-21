@@ -2,7 +2,7 @@
 import os
 import asyncio
 import subprocess
-import sys
+
 
 def read_files_in_folder(path,end='part'):
     all_files = []
@@ -43,10 +43,25 @@ async def toMp4(input,output):
 
     # proc = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     
+def transform_parts_to_mp4(folder_path, output_folder= "E:\\videos"):
+    all_part = read_files_in_folder(folder_path)
+    rename_parts(all_part)
+    all_flv = read_files_in_folder(folder_path,'flv')
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    for file in all_flv:
+       asyncio.run(toMp4(file,output_folder)) 
+    for file in all_flv:
+        os.remove(file)
+    pass
+
 if __name__ == '__main__':
-   # 读取E盘根目录下名为"my_folder"的文件夹里的所有文件
-   folder_path = "E:\\biliup"
-   output_folder = "F:\\video"
+   current_dir = os.path.dirname(os.path.abspath(__file__))
+   folder_path  = os.path.join(current_dir, '../')
+   
+   output_folder = "E:\\videos"
+   if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
    all_part = read_files_in_folder(folder_path)
    rename_parts(all_part)
    all_flv = read_files_in_folder(folder_path,'flv')
